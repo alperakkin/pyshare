@@ -1,0 +1,2 @@
+class ShareServer:
+    pass
