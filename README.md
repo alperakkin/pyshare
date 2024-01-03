@@ -1,2 +1,2 @@
 # pyshare
-Shares files, data and python objects via network
+Shares python objects via network connection
