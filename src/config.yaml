@@ -1,9 +1,9 @@
 port: 5555
 client:
-  - addresses: [
+  addresses: [
       "192.168.1.9",
       "192.168.1.10",
       "192.168.1.11"
       ]
 server:
-  - address: "192.168.1.5"
+  address: "192.168.1.101"
