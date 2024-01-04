@@ -13,17 +13,12 @@ class ShareClient:
         port = self.config['port']
         self.socket.connect((server_address, port))
 
-    def dump_object(self, obj: object) -> BytesIO:
-        f = BytesIO()
-        pick = pickle.Pickler(f)
-        pick.dump(obj)
-        return f
-
 
 
 
     def send_obj(self, obj: object) -> bool:
-        self.socket.send(self.dump_object(obj))
+        serialized = pickle.dumps(obj)
+        self.socket.send(serialized)
         received_ok  = self.socket.recv(4096)
         print(received_ok)
 

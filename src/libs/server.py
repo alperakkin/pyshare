@@ -1,4 +1,5 @@
 import socket
+import pickle
 class ShareServer:
     def __init__(self, config) -> None:
         self.socket  = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -13,7 +14,8 @@ class ShareServer:
 
         with conn:
             while True:
-                data = conn.recv(1024)
+                data = conn.recv(4096)
                 if not data: break
-                conn.send('Data is received')
+                conn.send(b'Data is received')
+                data = pickle.loads(data)
                 print(data)
