@@ -9,6 +9,9 @@ if __name__ == '__main__':
         server = ShareServer(config)
     else:
         client = ShareClient(config)
+        client.connect()
+        client.send_obj({'foo': 'bar'})
+
 
 
 

@@ -6,10 +6,14 @@ def load_config(path: str, loader=yaml.safe_load) -> dict:
     return data
 
 
-def is_server(server_address: str) -> bool:
+def get_local_ip() -> str:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(('192.168.100.100', 80))
     ip = s.getsockname()[0]
     s.close()
-    return ip == server_address
+    return ip
+
+def is_server(server_address: str) -> bool:
+    return get_local_ip() == server_address
+
 
