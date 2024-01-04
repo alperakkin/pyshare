@@ -15,4 +15,5 @@ class ShareServer:
             while True:
                 data = conn.recv(1024)
                 if not data: break
-                conn.sendall(data)
+                conn.send('Data is received')
+                print(data)
