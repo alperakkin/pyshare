@@ -6,9 +6,11 @@ class ShareServer:
         self.port = config['port']
 
     def start_server(self) -> None:
+        print('Server is starting...')
         self.socket.bind((self.host, self.port))
         self.socket.listen(1)
         conn, addr = self.socket.accept()
+
         with conn:
             while True:
                 data = conn.recv(1024)

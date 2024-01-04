@@ -7,6 +7,8 @@ if __name__ == '__main__':
 
     if is_server(config['server']['address']):
         server = ShareServer(config)
+        server.start_server()
+
     else:
         client = ShareClient(config)
         client.connect()
