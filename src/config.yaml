@@ -1,7 +1,7 @@
-receiver:
+receive:
   port: 5555
 
-sender:
+to_send:
   address: "192.168.1.122"
   port: 5555
 
