@@ -1,3 +1,7 @@
-port: 5555
-server:
-  address: "192.168.1.116"
+receiver:
+  port: 5555
+
+sender:
+  address: "192.168.1.122"
+  port: 5555
+
