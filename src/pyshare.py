@@ -12,6 +12,7 @@ class PyShare:
         config = load_config('config.yaml')
         self.sender_socket = self.create_socket()
         self.receiver_socket = self.create_socket()
+        self.connected = False
 
         self.receiver = get_local_ip()
         self.receiver_port = config['receive']['port']
@@ -43,7 +44,9 @@ class PyShare:
         self.sender_socket.connect((self.sender, self.sender_port))
 
     def send_obj(self, obj: object) -> str:
-        self.connect()
+        if not self.connected:
+            self.connect()
+            self.connected = True
         serialized = pickle.dumps(obj)
         self.sender_socket.send(serialized)
         return self.sender_socket.recv(self.BANDWITH)
