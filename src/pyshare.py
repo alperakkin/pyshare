@@ -34,18 +34,24 @@ class PyShare:
                 data = conn.recv(self.BANDWITH)
                 if not data:
                     continue
-                conn.send(b'Data is received!')
-                self.queue.put(pickle.loads(data))
+                if data.startswith(b'<request>: '):
+                    obj = eval(data.decode().lstrip('<request>: '))
+                    res = self.send_obj(obj, (self.receiver,
+                                              self.receiver_port))
+                    print('PyObject is sent: %s ' % res)
+                else:
+                    conn.send(b'Data is received!')
+                    self.queue.put(pickle.loads(data))
 
     def create_socket(self) -> socket.socket:
         return socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    def connect(self) -> None:
-        self.sender_socket.connect((self.sender, self.sender_port))
+    def connect(self, connection) -> None:
+        self.sender_socket.connect(connection)
 
-    def send_obj(self, obj: object) -> str:
+    def send_obj(self, obj: object, connection: tuple) -> str:
         if not self.connected:
-            self.connect()
+            self.connect(connection)
             self.connected = True
         serialized = pickle.dumps(obj)
         self.sender_socket.send(serialized)
@@ -53,3 +59,10 @@ class PyShare:
 
     def receive_obj(self) -> object:
         return self.queue.get()
+
+    def import_from(self, object_name: str, connection: tuple) -> object:
+        if not self.connected:
+            self.connect(connection)
+            self.connected = True
+        self.sender_socket.send(b'<request>: %s' % object_name)
+        return self.sender_socket.recv(self.BANDWITH)
