@@ -2,23 +2,19 @@ import socket
 import pickle
 from threading import Thread
 
-from libs.utils import load_config, get_local_ip
+from libs.utils import get_local_ip
 
 
 class PyShare:
     BANDWITH = 4096
 
-    def __init__(self) -> None:
-        config = load_config('config.yaml')
+    def __init__(self, port) -> None:
         self.sender_socket = self.create_socket()
         self.receiver_socket = self.create_socket()
         self.connected = False
+        self.port = port
 
         self.receiver = get_local_ip()
-        self.receiver_port = config['receive']['port']
-
-        self.sender = config['to_send']['address']
-        self.sender_port = config['to_send']['port']
 
         self.listen_incoming = Thread(target=self.listen, daemon=True)
         self.listen_incoming.start()
@@ -28,7 +24,7 @@ class PyShare:
         self.scope[name] = obj
 
     def listen(self) -> None:
-        self.receiver_socket.bind((self.receiver, self.receiver_port))
+        self.receiver_socket.bind((self.receiver, self.port))
         self.receiver_socket.listen(1)
         conn, addr = self.receiver_socket.accept()
 
@@ -54,7 +50,7 @@ class PyShare:
         conn.send(serialized)
         return conn.recv(self.BANDWITH)
 
-    def import_from(self, object_name: str, connection: tuple) -> object:
+    def import_from(self, connection: tuple, object_name: str) -> object:
         if not self.connected:
             self.connect(connection)
             self.connected = True
