@@ -1,3 +1,4 @@
+import re
 import socket
 import pickle
 from threading import Thread
@@ -11,8 +12,9 @@ class PyShare:
     def __init__(self, port) -> None:
         self.sender_socket = self.create_socket()
         self.receiver_socket = self.create_socket()
-        self.connected = False
+        self.connection = False
         self.port = port
+        self.pattern = r"<r>(.*)</r>"
 
         self.receiver = get_local_ip()
 
@@ -24,8 +26,10 @@ class PyShare:
         self.scope[name] = obj
 
     def listen(self) -> None:
+
         self.receiver_socket.bind((self.receiver, self.port))
         self.receiver_socket.listen(1)
+
         conn, addr = self.receiver_socket.accept()
 
         with conn:
@@ -34,9 +38,12 @@ class PyShare:
                 if not data:
                     continue
 
-                if data.startswith(b'<request>: '):
-                    obj_name = data.decode().lstrip('<request>: ')
+                if data.startswith(b'<r>') and data.endswith(b'</r>'):
+
+                    obj_name = re.match(self.pattern, data.decode())
+                    obj_name = obj_name.groups()[0]
                     obj = self.scope.get(obj_name)
+
                     self.send_obj(conn, obj)
 
     def create_socket(self) -> socket.socket:
@@ -44,17 +51,19 @@ class PyShare:
 
     def connect(self, connection) -> None:
         self.sender_socket.connect(connection)
+        self.connection = True
 
     def send_obj(self, conn: object, obj: object) -> str:
         serialized = pickle.dumps(obj)
         conn.send(serialized)
-        return conn.recv(self.BANDWITH)
 
     def import_from(self, connection: tuple, object_name: str) -> object:
-        if not self.connected:
+        if not self.connection:
             self.connect(connection)
-            self.connected = True
-        request_string = '<request>: %s' % object_name
+            self.connection = True
+
+        request_string = f'<r>{object_name}</r>'
+
         self.sender_socket.send(request_string.encode())
         obj = self.sender_socket.recv(self.BANDWITH)
 
