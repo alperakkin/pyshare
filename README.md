@@ -1,13 +1,13 @@
 # pyshare
 
 ## DEFINITION
-This module creates link between to python applications to import python objects via socket connection as a proof of concept.
+This module creates link between two python applications to import python objects or download files via socket connection as a proof of concept.
 
 Security-related constraints have not yet been addressed. Therefore, take this into consideration when using this code.
 
 ## QUICK START
 
-Import pyshare object both end side in the same application
+### Import pyshare object both end side in the same application
 
 
 ```python
@@ -20,11 +20,7 @@ share = PyShare(PORT)
 myobj = {"foo": "bar"}
 share.attach("myobj", myobj)
 
-# High level objects
-import pandas
 
-dt = pandas.DataFrame({'foo': [1, 2, 3], 'bar': [4, 5, 6]})
-share.attach('dt', dt)
 ```
 
 On the other endpoint to collect the python object
@@ -87,3 +83,37 @@ $
 1   2     5
 2   3     6
 ```
+
+### Download a file from the other end of the network
+
+
+```python
+# Application on machine 10.0.0.10
+from pyshare import PyShare
+
+PORT = 5555
+share = PyShare(PORT)
+
+
+share.share_folder("/path/to")
+
+```
+
+On the other endpoint to collect the python object
+```python
+# Application on machine 10.0.0.20
+from pyshare import PyShare
+
+PORT = 5555
+
+share = PyShare(PORT)
+
+OTHER_MACHINE = ("10.0.0.10", PORT)
+
+share.get_file(OTHER_MACHINE, "/path/to/source.png", "destination.png")
+
+
+```
+
+
+This will download source.png from the other end of the network and writes as detination.png
