@@ -7,7 +7,7 @@ Security-related constraints have not yet been addressed. Therefore, take this i
 
 ## QUICK START
 
-### Import pyshare object both end side in the same application
+### Import pyshare object both end side in the same application
 
 
 ```python
@@ -84,7 +84,11 @@ $
 2   3     6
 ```
 
-### Download a file from the other end of the network
+
+
+
+
+### Download a file from the other end of the network
 
 
 ```python
