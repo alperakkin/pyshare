@@ -3,7 +3,6 @@
 ## DEFINITION
 This module creates link between two python applications to import python objects or download files via socket connection as a proof of concept.
 
-Security-related constraints have not yet been addressed. Therefore, take this into consideration when using this code.
 
 ## QUICK START
 

@@ -1,6 +1,7 @@
 import re
 import socket
 import pickle
+import rsa
 
 from threading import Thread
 from pathlib import Path
@@ -19,6 +20,7 @@ class PyShare:
         self.port = port
         self.import_pattern = r"<r>(.*)</r>"
         self.file_pattern = r"<f>(.*)</f>"
+        self.login_pattern = r"<l>(.*)</l>"
 
         self.receiver = get_local_ip()
 
@@ -26,6 +28,19 @@ class PyShare:
         self.__service.start()
         self.__scope = {}
         self.__shared_folders = []
+        self.__private = None
+        self.__public = None
+        self.__cert = None
+
+        self.__public, self.__private = rsa.newkeys(self.BANDWITH)
+
+    def encrypt(self, msg):
+        # TODO: yield partial encrypted msgs for big objects
+        return rsa.encrypt(msg, self.__public)
+
+    def decrpyt(self, msg):
+        # TODO: get batches for big objects
+        return rsa.decrypt(msg, self.__cert)
 
     def attach(self, name: str, obj: object) -> None:
         self.__scope[name] = obj
@@ -43,8 +58,11 @@ class PyShare:
                 if not data:
                     continue
 
-                if data.startswith(b'<r>') and data.endswith(b'</r>'):
+                if data == b'<l>key</l>':
+                    msg = pickle.dumps(self.__private)
+                    self.send_msg(conn, msg)
 
+                if data.startswith(b'<r>') and data.endswith(b'</r>'):
                     obj_name = re.match(self.import_pattern, data.decode())
                     obj_name = obj_name.groups()[0]
                     obj = self.__scope.get(obj_name)
@@ -57,15 +75,15 @@ class PyShare:
                     source = Path(source.groups()[0])
 
                     if str(source.parent) not in self.__shared_folders:
-                        self.send_msg(conn, b"<!shared>")
+                        self.send_msg(conn, b"<!shared>", encrypt=True)
                         continue
 
                     if not source.exists():
-                        self.send_msg(conn, b"<!file>")
+                        self.send_msg(conn, b"<!file>", encrypt=True)
                         continue
 
                     with open(source, 'rb') as f:
-                        self.send_msg(conn, f.read())
+                        self.send_msg(conn, f.read(), encrypt=True)
 
     def share_folder(self, path: str) -> None:
         self.__shared_folders.append(path)
@@ -77,13 +95,18 @@ class PyShare:
         if not self.connection:
             self.sender_socket.connect(connection)
             self.connection = True
+            self.sender_socket.send(b'<l>key</l>')
+            private_key = self.sender_socket.recv(self.BANDWITH)
+            self.__cert = pickle.loads(private_key)
 
-    def send_msg(self, conn: object, msg: bytes) -> None:
+    def send_msg(self, conn: object, msg: bytes,
+                 encrypt: bool = False) -> None:
         conn.send(msg)
 
     def send_obj(self, conn: object, obj: object) -> None:
         serialized = pickle.dumps(obj)
-        self.send_msg(serialized)
+        encrypted = self.encrypt(serialized)
+        self.send_msg(conn, encrypted)
 
     def import_from(self, connection: tuple, object_name: str) -> object:
         self.connect(connection)
@@ -93,7 +116,8 @@ class PyShare:
         self.sender_socket.send(request_string.encode())
         obj = self.sender_socket.recv(self.BANDWITH)
 
-        return pickle.loads(obj)
+        decrypted = rsa.decrypt(obj, self.__cert)
+        return pickle.loads(decrypted)
 
     def get_file(
             self, connection: tuple, source: str, destination: str
@@ -104,7 +128,8 @@ class PyShare:
         request_string = f'<f>{source}</f>'
 
         self.sender_socket.send(request_string.encode())
-        file_object = self.sender_socket.recv(self.MAX_FILE_SIZE)
+        encrypted = self.sender_socket.recv(self.MAX_FILE_SIZE)
+        file_object = self.decrpyt(encrypted, self.__cert)
 
         if file_object == b"<!shared>":
             raise PermissionError('Request folder is not a shared folder')
