@@ -6,7 +6,7 @@ This module creates link between two python applications to import python object
 
 ## QUICK START
 
-### Import pyshare object both end side in the same application
+### Import pyshare object both end side in the same application
 
 
 ```python
@@ -83,7 +83,11 @@ $
 2   3     6
 ```
 
-### Download a file from the other end of the network
+
+
+
+
+### Download a file from the other end of the network
 
 
 ```python
