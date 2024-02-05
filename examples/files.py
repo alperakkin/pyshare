@@ -1,7 +1,9 @@
 from pyshare import PyShare
 
 PORT = 5555
-OTHER_MACHINE = ('192.168.1.160', PORT)
+IP = '10.0.0.10'
+
+OTHER_MACHINE = (IP, PORT)
 
 share = PyShare(PORT)
 
